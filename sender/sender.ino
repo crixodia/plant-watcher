@@ -4,6 +4,10 @@
 DHT dht(12, DHT11);
 SoftwareSerial espSerial(2, 3); // RX, TX
 
+float temperature;  // Temperatura
+float humidity;     // Humidity
+float soil;         // Soil humidity
+
 void setup() {
   Serial.begin(9600);
   espSerial.begin(9600);
@@ -11,14 +15,14 @@ void setup() {
 }
 
 void loop() {
-  float tc = dht.readTemperature();
-  float hu = dht.readHumidity();
-  float sh = analogRead(A0);
+  temperature = dht.readTemperature();
+  humidity = dht.readHumidity();
+  soil = analogRead(A0);
 
-  if (isnan(tc) || isnan(hu)) {
+  if (isnan(temperature) || isnan(humidity)) {
     // Does not send something if sensor fails
   } else {
-    String data = String(tc, 1) + "," + String(hu, 1) + "," + String(sh);
+    String data = String(temperature, 1) + "," + String(humidity, 1) + "," + String(soil);
     espSerial.println(data);
     // Serial.println(data);
   }
@@ -29,6 +33,6 @@ void loop() {
       Serial.println("ESP-01: " + espData);
     }
   }
-  
+
   delay(1000);
 }
