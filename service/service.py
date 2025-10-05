@@ -32,12 +32,27 @@ console_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
-mydb = mysql.connector.connect(
-    host=config.get("database", "host"),
-    user=os.getenv("DB_USER"),
-    password=os.getenv("DB_PASSWORD"),
-    database=config.get("database", "name")
-)
+
+def get_db_connection():
+    """Establish database connection with proper error handling."""
+    try:
+        connection = mysql.connector.connect(
+            host=config.get("database", "host"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=config.get("database", "name"),
+            port=config.getint("database", "port", fallback=3306)
+        )
+        logger.info("Database connection established successfully")
+        return connection
+    except mysql.connector.Error as err:
+        logger.error(f"Database connection failed: {err}")
+        logger.error("Troubleshooting tips:")
+        logger.error("1. Verify database credentials in .env file")
+        logger.error("2. Check if MySQL server is running")
+        logger.error("3. Ensure database exists and user has proper permissions")
+        logger.error(f"4. Verify host '{config.get('database', 'host')}' is accessible")
+        raise
 
 
 def fetch_data_from_api(api_url):
@@ -52,7 +67,11 @@ def fetch_data_from_api(api_url):
 
 
 def insert_data_to_db(data):
+    """Insert sensor data into database."""
+    mydb = None
+    cursor = None
     try:
+        mydb = get_db_connection()
         cursor = mydb.cursor()
         sql = "INSERT INTO readings (timestamp_utc, temperature, humidity, soil) VALUES (%s, %s, %s, %s)"
         val = (
@@ -67,7 +86,10 @@ def insert_data_to_db(data):
     except mysql.connector.Error as err:
         logger.error(f"Error inserting data to database: {err}")
     finally:
-        cursor.close()
+        if cursor:
+            cursor.close()
+        if mydb and mydb.is_connected():
+            mydb.close()
 
 
 def main():
