@@ -59,7 +59,7 @@ ESP_PASSWORD=your_esp_password
 
 2. **Install Python dependencies**:
    ```bash
-   pip install mysql-connector-python python-dotenv requests configparser
+   pip install mysql-connector-python python-dotenv requests
    ```
 
 3. **Set up the database**:
@@ -91,6 +91,12 @@ ESP_PASSWORD=your_esp_password
 
    [service]
    interval_seconds = 600
+   ```
+
+6. **Test the setup**:
+   ```bash
+   # Test database connection and fetch data once
+   python service.py --once
    ```
 
 ### Running the Service
@@ -132,6 +138,46 @@ The `readings` table stores:
 - `humidity`: Humidity percentage (decimal 5,2)  
 - `soil`: Soil moisture level (unsigned integer)
 - `created_at`: Record creation timestamp
+
+## Troubleshooting
+
+### Database Connection Issues
+
+If you encounter "Access denied" or connection errors:
+
+1. **Verify credentials**: Check your `.env` file has correct database credentials
+   ```bash
+   DB_USER=your_actual_username
+   DB_PASSWORD=your_actual_password
+   ```
+
+2. **Check database server**: Ensure MySQL is running and accessible
+   ```bash
+   # Test connection manually
+   mysql -h your_database_host -u your_username -p
+   ```
+
+3. **Verify database exists**: Make sure the `plant_watcher` database was created
+   ```sql
+   SHOW DATABASES;
+   USE plant_watcher;
+   SHOW TABLES;
+   ```
+
+4. **Check user permissions**: Ensure your database user has proper permissions
+   ```sql
+   GRANT ALL PRIVILEGES ON plant_watcher.* TO 'your_username'@'%';
+   FLUSH PRIVILEGES;
+   ```
+
+5. **Network connectivity**: If using a remote database, check firewall and network settings
+
+### ESP8266 Connection Issues
+
+- Verify ESP8266 device is powered on and connected to network
+- Check the endpoint URL in `config.ini`
+- Ensure ESP8266 credentials in `.env` file match device settings
+- Test API endpoint manually: `curl -u username:password http://esp-ip/read`
 
 ## Security Notes
 
