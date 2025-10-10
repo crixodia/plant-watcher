@@ -47,6 +47,9 @@ DB_PASSWORD=your_database_password
 # ESP8266 device credentials
 ESP_USER=your_esp_username
 ESP_PASSWORD=your_esp_password
+
+# API key for remote access (generate a secure random string)
+API_KEY=your_secure_api_key_here
 ```
 
 ### Installation
@@ -59,7 +62,12 @@ ESP_PASSWORD=your_esp_password
 
 2. **Install Python dependencies**:
    ```bash
-   pip install mysql-connector-python python-dotenv requests
+   pip install mysql-connector-python python-dotenv requests flask flask-cors
+   ```
+   
+   Or use the requirements file:
+   ```bash
+   pip install -r requirements.txt
    ```
 
 3. **Set up the database**:
@@ -116,6 +124,43 @@ The service will:
 - Store readings (timestamp, temperature, humidity, soil moisture) in the MySQL database
 - Log all activities with timestamps to both console and log file
 - Run at configured intervals (default: 10 minutes)
+
+### API Server
+
+For remote control and monitoring, you can run the API server:
+
+```bash
+python api.py
+```
+
+The API server provides these endpoints:
+- `GET /` - API information and available endpoints
+- `GET /read?api_key=YOUR_KEY` - Fetch and store sensor data
+- `POST /water?api_key=YOUR_KEY` - Trigger plant watering system
+- `GET /photo?api_key=YOUR_KEY` - Take a photo of the plant
+- `POST /restart?api_key=YOUR_KEY` - Restart ESP8266 hardware
+
+**CORS Support**: The API includes Cross-Origin Resource Sharing (CORS) headers, allowing web applications from different domains to make requests to the API.
+
+**API Key**: Add an `API_KEY` variable to your `.env` file with a secure random string. If no key is found, the API will generate a temporary one for the session.
+
+**Example usage**:
+```bash
+# Get API info
+curl http://localhost:5000/
+
+# Read sensor data (replace YOUR_KEY with actual key)
+curl http://localhost:5000/read?api_key=YOUR_KEY
+
+# Water the plant
+curl -X POST http://localhost:5000/water?api_key=YOUR_KEY
+
+# Take a photo
+curl http://localhost:5000/photo?api_key=YOUR_KEY
+
+# Restart hardware
+curl -X POST http://localhost:5000/restart?api_key=YOUR_KEY
+```
 
 ### Data Format
 
@@ -178,6 +223,27 @@ If you encounter "Access denied" or connection errors:
 - Check the endpoint URL in `config.ini`
 - Ensure ESP8266 credentials in `.env` file match device settings
 - Test API endpoint manually: `curl -u username:password http://esp-ip/read`
+
+### API Server Issues
+
+If the API server shows warnings about missing API key:
+
+1. **Add API key to .env file**:
+   ```bash
+   # Generate a secure random string (32+ characters recommended)
+   API_KEY=your_very_secure_random_string_here
+   ```
+
+2. **Generate a secure API key** (optional):
+   ```bash
+   # Using Python
+   python -c "import secrets; print('API_KEY=' + secrets.token_urlsafe(32))"
+   
+   # Using OpenSSL
+   openssl rand -base64 32
+   ```
+
+3. **Verify .env file is loaded**: Check that your `.env` file is in the `service/` directory
 
 ## Security Notes
 
