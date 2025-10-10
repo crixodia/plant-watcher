@@ -43,15 +43,9 @@ def get_db_connection():
             database=config.get("database", "name"),
             port=config.getint("database", "port", fallback=3306)
         )
-        logger.info("Database connection established successfully")
         return connection
     except mysql.connector.Error as err:
         logger.error(f"Database connection failed: {err}")
-        logger.error("Troubleshooting tips:")
-        logger.error("1. Verify database credentials in .env file")
-        logger.error("2. Check if MySQL server is running")
-        logger.error("3. Ensure database exists and user has proper permissions")
-        logger.error(f"4. Verify host '{config.get('database', 'host')}' is accessible")
         raise
 
 
@@ -82,7 +76,7 @@ def insert_data_to_db(data):
         )
         cursor.execute(sql, val)
         mydb.commit()
-        logger.info("Data inserted successfully")
+        logger.info(data)
     except mysql.connector.Error as err:
         logger.error(f"Error inserting data to database: {err}")
     finally:
